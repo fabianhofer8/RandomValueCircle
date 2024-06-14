@@ -3,28 +3,18 @@ version: 2.1
 executors:
   android:
     docker:
+      - image: circleci/openjdk:17-jdk-buster  # CircleCI image with JDK 17
       - image: circleci/android:api-30
     working_directory: ~/code
     environment:
       ADB_INSTALL_TIMEOUT: 5
       GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4096m -Dkotlin.incremental=false'
-      JAVA_HOME: /usr/local/openjdk-17
-      PATH: /usr/local/openjdk-17/bin:$PATH
 
 jobs:
   unit-test:
     executor: android
     steps:
       - checkout
-
-      - run:
-          name: Set up JDK 17
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y openjdk-17-jdk
-            sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-17-openjdk-amd64/bin/java 1
-            sudo update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
-            java -version
 
       - run:
           name: Run Unit Tests
