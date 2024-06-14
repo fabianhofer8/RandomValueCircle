@@ -9,13 +9,13 @@ jobs:
       tag: default
     steps:
       - checkout
-
+      - run: ./gradlew build
       - android/run-tests:
           test-command: ./gradlew lint testDebug --continue
-
-      #- android/start-emulator-and-run-tests:
-       #   test-command: ./gradlew connectedDebugAndroidTest
-        #  system-image: system-image;android-29,google_apis;x86
+      - android/run-tests:
+          test-command: ./gradlew assembleRelease
+      - android/run-tests:
+          test-command: ./gradlew test
 
 workflows:
   test:
