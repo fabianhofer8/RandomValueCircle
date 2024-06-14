@@ -4,29 +4,30 @@ orbs:
   android: circleci/android@2.1.2
   gcp-cli: circleci/gcp-cli@2.4.1
 
+executors:
+  android-executor:
+    docker:
+      - image: circleci/openjdk:17.0.2
+      - image: circleci/android:api-30
+    working_directory: ~/code
+    environment:
+      ADB_INSTALL_TIMEOUT: 5
+      GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4096m -Dkotlin.incremental=false'
+      ANDROID_HOME: /opt/android/sdk
+      PATH: /opt/android/sdk/platform-tools:/opt/android/sdk/tools:$PATH
+
 jobs:
   unit-test:
-    executor:
-      name: android/android-docker
-      tag: 2022.08.1
+    executor: android-executor
     steps:
       - checkout
       - android/restore-gradle-cache
-      - android/run-tests:
-          test-command: ./gradlew testDebug
-   #   - android/save-gradle-cache
-   #   - run:
-    #      name: Save test results
-    #      command: |
-     #         mkdir -p ~/test-results/junit/
-     #         find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
-     #     when: always
-   #   - store_test_results:
-    #      path: ~/test-results
-    #  - store_artifacts:
-    #      path: ~/test-results/junit
+      - run:
+          name: Run Unit Tests
+          command: ./gradlew testDebug
+      - android/save-gradle-cache
 
 workflows:
   test-and-build:
     jobs:
-    - unit-test
+      - unit-test
