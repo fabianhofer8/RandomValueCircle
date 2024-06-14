@@ -1,33 +1,26 @@
-version: 2.1
-
+version: '2.1'
 orbs:
-  android: circleci/android@2.1.2
-  gcp-cli: circleci/gcp-cli@2.4.1
-
-executors:
-  android-executor:
-    docker:
-      - image: cimg/openjdk:21.0.2
-      - image: circleci/android:api-30
-    working_directory: ~/code
-    environment:
-      ADB_INSTALL_TIMEOUT: 5
-      GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4096m -Dkotlin.incremental=false'
-      ANDROID_HOME: /opt/android/sdk
-      PATH: /opt/android/sdk/platform-tools:/opt/android/sdk/tools:$PATH
-
+  android: circleci/android@2.4.0
 jobs:
-  unit-test:
-    executor: android-executor
+  test:
+    executor:
+      name: android/android-machine
+      resource-class: large
+      tag: default
     steps:
       - checkout
-      - android/restore-gradle-cache
-      - run:
-          name: Run Unit Tests
-          command: ./gradlew testDebug
-      - android/save-gradle-cache
-
+      - android/create-avd:
+          avd-name: myavd
+          install: true
+          system-image: system-images;android-29;default;x86
+      - android/start-emulator:
+          avd-name: myavd
+          no-window: true
+          restore-gradle-cache-prefix: v1a
+      - android/run-tests
+      - android/save-gradle-cache:
+          cache-prefix: v1a
 workflows:
-  test-and-build:
+  test:
     jobs:
-      - unit-test
+      - test
