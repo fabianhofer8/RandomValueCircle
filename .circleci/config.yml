@@ -9,7 +9,9 @@ jobs:
         - android/run-tests:
             test-command: ./gradlew testDebug
         - android/save-gradle-cache
+
 workflows:
-    test-and-build:
+    version: 2
+    build_and_test:
         jobs:
         - unit-test
