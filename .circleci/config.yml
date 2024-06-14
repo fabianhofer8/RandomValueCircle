@@ -1,17 +1,37 @@
+version: 2.1
+
+executors:
+  android:
+    docker:
+      - image: circleci/android:api-30
+    working_directory: ~/code
+    environment:
+      ADB_INSTALL_TIMEOUT: 5
+      GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4096m -Dkotlin.incremental=false'
+
 jobs:
-    unit-test:
-      executor:
-        name: android/android-docker
-        tag: 2022.08.1
-      steps:
-        - checkout
-        - android/restore-gradle-cache
-        - android/run-tests:
-            test-command: ./gradlew testDebug
-        - android/save-gradle-cache
+  unit-test:
+    executor: android
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - gradle-{{ checksum "build.gradle" }}
+            - gradle-{{ checksum "app/build.gradle" }}
+            - gradle-
+
+      - run:
+          name: Run Unit Tests
+          command: ./gradlew testDebug
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: gradle-{{ checksum "build.gradle" }}-{{ checksum "app/build.gradle" }}
 
 workflows:
-    version: 2
-    build_and_test:
-        jobs:
-        - unit-test
+  version: 2
+  build_and_test:
+    jobs:
+      - unit-test
