@@ -1,17 +1,37 @@
-# .circleci/config.yaml
 version: 2.1
+
 orbs:
   android: circleci/android@2.4.0
-  # https://circleci.com/developer/orbs/orb/circleci/android for latest version
+
 workflows:
   test:
     jobs:
-      # This job uses the Android machine image by default
       - android/run-ui-tests:
-          # Use pre-steps and post-steps if necessary
-          # to execute custom steps before and afer any of the built-in steps
           system-image: system-images;android-29;default;x86
           executor:
             name: android/android-machine
             resource-class: large
             tag: 2021.10.1
+          steps:
+            - checkout
+            - run:
+                name: Install JDK 17
+                command: |
+                  sudo apt-get update
+                  sudo apt-get install -y openjdk-17-jdk
+                  sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-17-openjdk-amd64/bin/java 1
+                  sudo update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/java-17-openjdk-amd64/bin/javac 1
+                  sudo update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java
+                  sudo update-alternatives --set javac /usr/lib/jvm/java-17-openjdk-amd64/bin/javac
+                  echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> $BASH_ENV
+                  echo 'export PATH=$JAVA_HOME/bin:$PATH' >> $BASH_ENV
+                  source $BASH_ENV
+            - run:
+                name: Verify JDK Version
+                command: java -version
+            - android/start-emulator-and-run-tests:
+                system-image: system-images;android-29;default;x86
+                emulator-options: "-no-window -no-audio -no-boot-anim -verbose -no-snapshot -gpu swiftshader_indirect"
+                test-package: "com.example.android.tests"
+                emulator-boot-timeout: 1200 # Increase timeout to 20 minutes
+
